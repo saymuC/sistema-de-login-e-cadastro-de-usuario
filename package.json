@@ -1,0 +1,21 @@
+{
+  "name": "sistema-de-login-e-cadastro-de-usuario",
+  "version": "1.0.0",
+  "description": "sistema de login e cadastro de usuario simples",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "chalk": "^5.4.1",
+    "inquirer": "^12.6.0",
+    "readline-sync": "^1.4.10",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
