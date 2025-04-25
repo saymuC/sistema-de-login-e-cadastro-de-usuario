@@ -1,15 +1,17 @@
-import readline from 'readline-sync';
+import readlineS from 'readline-sync';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 import bcript from 'bcrypt';
+import readline from 'readline';
+import { stdin as input, stdout as output } from 'node:process';
 
 const db = await open({
     filename: './banco.db',
     driver: sqlite3.Database,
 });
-
+const saltRounds = 10; //bcrypt
 async function criartagbelaSeNaoExistir() {
    await db.run(`
         CREATE TABLE IF NOT EXISTS usuarios (
@@ -21,6 +23,23 @@ async function criartagbelaSeNaoExistir() {
     );      
 };
 criartagbelaSeNaoExistir();
+
+async function inserirUser(nome, email, senha) {
+    const emailRepetido = await db.get(
+        `SELECT * FROM usuarios WHERE email = ?`, [email]
+    );
+
+    if (emailRepetido) {
+        console.log(chalk.red('Já existe um usuário cadastrado com este email. Por favor tente outro.'));
+        return;
+    }
+
+    await db.run(
+        `INSERT INTO usuarios (nome, email, senha)
+         VALUES (?, ?, ?)`,
+        [nome, email, senha]
+        );
+}
 
 let MENU = [
     'Cadastrar novo usuário',
@@ -63,6 +82,21 @@ function Menus() {
                     Menus();
                 }
         });
+};
+
+async function cadastrarUser() {
+    console.log(chalk.blueBright('===Cadastrar usuário==='));
+    const nome_resposta = readlineS.question('Qual o nome do usuário? ').trim();
+    if (nome_resposta === '') {
+        console.log(chalk.red('O nome não pode estar vazio!'));
+        return Menus();
+    }
+    const email_resposta = readlineS.questionEMail('Qual o email do usuario? ');
+    const senha_resposta = readlineS.question('Qual a senha do usuário? ')
+    const hash = await bcript.hash(senha_resposta, saltRounds);
+    inserirUser(nome_resposta, email_resposta, senha_resposta);
+    console.log(chalk.green('Usuário cadastrado com sucesso!'))
+    Menus();
 };
 
 Menus();
