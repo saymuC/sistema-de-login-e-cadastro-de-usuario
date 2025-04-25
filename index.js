@@ -11,7 +11,9 @@ const db = await open({
     filename: './banco.db',
     driver: sqlite3.Database,
 });
-const saltRounds = 10; //bcrypt
+const saltRounds = 10;
+function limpar() { console.clear() }
+limpar();
 async function criartagbelaSeNaoExistir() {
    await db.run(`
         CREATE TABLE IF NOT EXISTS usuarios (
@@ -30,7 +32,7 @@ async function inserirUser(nome, email, senha) {
     );
 
     if (emailRepetido) {
-        console.log(chalk.red('Já existe um usuário cadastrado com este email. Por favor tente outro.'));
+        console.log(chalk.red('\nJá existe um usuário cadastrado com este email. Por favor tente outro.'));
         return;
     }
 
@@ -82,55 +84,69 @@ function Menus() {
 };
 
 async function Login() {
-    console.log(chalk.blueBright('===Login==='));
+    console.log(chalk.blueBright('===Login===\n'));
     const dados = await db.all(`SELECT email, senha FROM usuarios`);
     const email_login = readlineS.question('Email: ');
     if (email_login === '') {
-        console.log(chalk.red('O email não pode estar vázio!'));
+        limpar();
+        console.log(chalk.red('O email não pode estar vázio!\n'));
         return;
     } 
     if (email_login === 'admin') {
-        console.log(chalk.green('iniciando a sessão de admin!'));
+        limpar();
+        console.log(chalk.green('iniciando a sessão de admin!\n'));
         return Menus();
     }
     const senha_login = readlineS.question('Senha: ');
     if (senha_login === '') {
-        console.log(chalk.red('A senha não pode estar vázio!'));
+        limpar();
+        console.log(chalk.red('A senha não pode estar vázio!\n'));
         return;
     }
-    const senha_hash = dados.find((dado) => dado.email === email_login).senha;
-    const senha_correta = await bcript.compare(senha_login, senha_hash);
-    const veriicar_login = dados.find((dado) => dado.email === email_login && dado.senha === senha_hash);
-    if (veriicar_login) {
-        console.log(chalk.green('Login realizado com sucesso!'));
+    const user = dados.find((dado) => dado.email === email_login);
+
+    if (!user) {
+        console.log(chalk.red('Email não encontrado!\n'));
+        return Login();
+    }
+
+    const senha_correta = await bcript.compare(senha_login, user.senha);
+
+    if (senha_correta) {
+        console.log(chalk.green('Login realizado com sucesso!\n'));
         Menus();
     } else {
-        console.log(chalk.red('Email ou senha incorretos!'));
+        console.log(chalk.red('Senha incorreta!\n'));
         Login();
     }
-    
+   
 }
 
 async function cadastrarUser() {
-    console.log(chalk.blueBright('===Cadastrar usuário==='));
+    limpar();
+    console.log(chalk.blueBright('===Cadastrar usuário===\n'));
     const nome_resposta = readlineS.question('Qual o nome do usuário? ').trim();
     if (nome_resposta === '') {
-        console.log(chalk.red('O nome não pode estar vazio!'));
+        limpar();
+        console.log(chalk.red('O nome não pode estar vazio!\n'));
         return Menus();
     }
     const email_resposta = readlineS.questionEMail('Qual o email do usuario? ');
     const senha_resposta = readlineS.question('Qual a senha do usuário? ')
     const hash = await bcript.hash(senha_resposta, saltRounds);
     inserirUser(nome_resposta, email_resposta, hash);
-    console.log(chalk.green('Usuário cadastrado com sucesso!'))
+    limpar();
+    console.log(chalk.green('Usuário cadastrado com sucesso!\n'))
     Menus();
 };
 
 async function listarUser() {
-    console.log(chalk.blueBright('====Listar Usuarios==='));
-    const dados = await db.all(`SELECT * FROM usuarios`);
+    limpar();
+    console.log(chalk.blueBright('====Listar Usuarios===\n'));
+    const dados = await db.all(`SELECT * FROM usuarios\n`);
     if (dados.length === 0) {
-        console.log(chalk.red('Não há nenhuma informação guardad no banco de dados!'));
+        limpar();
+        console.log(chalk.red('Não há nenhuma informação guardad no banco de dados!\n'));
         return Menus();
     } else {
         console.table(dados);
@@ -139,7 +155,8 @@ async function listarUser() {
 }
 
 async function removerUser() {
-    console.log(chalk.blueBright('===Remover Usuario==='));
+    limpar();
+    console.log(chalk.blueBright('===Remover Usuario===\n'));
     const dados = await db.all(`SELECT email FROM usuarios`);
     const mapa = dados.map(row => ({
         name: row.email,
@@ -156,11 +173,13 @@ async function removerUser() {
     const email = resposta.email;
     const usuario = await db.get(`SELECT * FROM usuarios WHERE email = ?`, [email]);
     if (!usuario) {
-        console.log(chalk.red('Usuário não encontrado!'));
+        limpar();
+        console.log(chalk.red('Usuário não encontrado!\n'));
         return Menus();
     }
     await db.run(`DELETE FROM usuarios WHERE email = ?`, [email]);
-    console.log(chalk.green('Usuário removido com sucesso!'));
+    limpar();
+    console.log(chalk.green('Usuário removido com sucesso!\n'));
     const resposta2 = await inquirer.prompt([
         {
             name: 'confirmar',
